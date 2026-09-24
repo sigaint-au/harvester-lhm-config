@@ -1,0 +1,8 @@
+apiVersion: harvesterhci.io/v1beta1
+kind: VirtualMachineTemplate
+metadata:
+  name: gpu-tumbleweed-p400
+  namespace: harvester-public
+spec:
+  defaultVersionId: harvester-public/gpu-tumbleweed-p400-v1
+  description: Tumbleweed with NVIDIA Quadro P400 passthrough. PIN THE VM TO harvester-node-527f OR harvester-node-49f4 AT CREATION (Node Scheduling) - ab56 has no GPU and the shared resource name schedules blindly.

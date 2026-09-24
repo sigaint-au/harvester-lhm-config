@@ -61,6 +61,13 @@ one node at a time and re-check jumbo mesh). DNS `139.99.149.92,
   `ping -M do -s 8972 10.120.14.1`.
 - GPU attach: claim exists → add `nvidia.com/GP107GL_QUADRO_P400` to the
   VM devices, pin the VM to its node. P400s on 527f/49f4 only (ab56: none).
+  Template `gpu-tumbleweed-p400` (4CPU/8G/50G, vlan14) is ready in
+  `harvester-public` — still pin the node at creation.
+- Namespaces (`server-lhm-prod`, `servers-lhm-dev`): images and keys are
+  shared by reference, nothing is copied — `harvester-public/<image>` in
+  the disk template, `default/<key>` in `sshNames`, and
+  `default/<network>` in the multus `networkName`. Proven with a booted
+  VM in `servers-lhm-dev` (DHCP `.13.111`).
 - Longhorn: replica auto-balance `least-effort`. Daily VM backups via
   `workloads/backups/` (`ScheduleVMBackup` is one object per VM, daily
   02:00, keep 7) — flip `suspend:false` once the target VM exists.

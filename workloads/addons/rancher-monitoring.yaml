@@ -1,0 +1,26 @@
+# Cluster monitoring (Prometheus/Grafana/Alertmanager). Alert routes to the
+# existing Discord/ntfy pipeline are a follow-up (see runbook).
+# rancherMonitoring disabled: standalone Harvester has no Rancher server,
+# and its ServiceMonitor renders empty metricRelabelings which the API
+# rejects (upstream rancher/rancher#52527).
+# NOTE: the Harvester addon controller was observed not propagating
+# valuesContent to the owned HelmChart on update (HelmChart stayed at
+# generation 1 with no valuesContent, so helm installed chart defaults and
+# hit the bug above). If the install job fails with
+# 'ServiceMonitor "rancher" ... metricRelabelings ... "null"', check
+# `kubectl get helmchart -n cattle-monitoring-system rancher-monitoring -o
+# jsonpath='{.spec.valuesContent}'` and patch the HelmChart directly to match
+# this file, then delete the failed helm-install job to retry.
+apiVersion: harvesterhci.io/v1beta1
+kind: Addon
+metadata:
+  name: rancher-monitoring
+  namespace: cattle-monitoring-system
+spec:
+  chart: rancher-monitoring
+  enabled: true
+  repo: http://harvester-cluster-repo.cattle-system.svc/charts
+  valuesContent: |
+    rancherMonitoring:
+      enabled: false
+  version: 109.0.3+up80.9.1-rancher.14

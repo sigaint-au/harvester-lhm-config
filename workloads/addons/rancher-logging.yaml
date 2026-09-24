@@ -1,0 +1,13 @@
+# Cluster logging (Bento/logging operator). Outputs/flows to the existing
+# pipeline are a follow-up (see runbook).
+apiVersion: harvesterhci.io/v1beta1
+kind: Addon
+metadata:
+  name: rancher-logging
+  namespace: cattle-logging-system
+spec:
+  chart: rancher-logging
+  enabled: true
+  repo: http://harvester-cluster-repo.cattle-system.svc/charts
+  valuesContent: |
+  version: 109.0.0+up4.10.0-rancher.23

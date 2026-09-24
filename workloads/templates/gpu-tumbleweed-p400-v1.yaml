@@ -1,0 +1,94 @@
+apiVersion: harvesterhci.io/v1beta1
+kind: VirtualMachineTemplateVersion
+metadata:
+  name: gpu-tumbleweed-p400-v1
+  namespace: harvester-public
+  labels:
+    template.harvesterhci.io/templateID: gpu-tumbleweed-p400
+spec:
+  templateId: harvester-public/gpu-tumbleweed-p400
+  vm:
+    metadata:
+      annotations:
+        harvesterhci.io/volumeClaimTemplates: |-
+          [{
+            "metadata": {
+              "name": "pvc-rootdisk",
+              "annotations": {
+                "harvesterhci.io/imageId": "harvester-public/tumbleweed-minimal"
+              }
+            },
+            "spec":{
+              "storageClassName": "lh-93d34ccb-7e92-4014-b5dc-5a9fdb6fb1e0",
+              "accessModes": ["ReadWriteMany"],
+              "resources":{
+                "requests":{
+                  "storage": "50Gi"
+                }
+              },
+              "volumeMode": "Block"
+            }
+          }]
+    spec:
+      runStrategy: RerunOnFailure
+      template:
+        metadata:
+          labels:
+            harvesterhci.io/vmName: gpu-worker
+        spec:
+          domain:
+            machine:
+              type: q35
+            cpu:
+              cores: 4
+              sockets: 1
+              threads: 1
+            memory:
+              guest: 8Gi
+            features:
+              acpi:
+                enabled: true
+            devices:
+              disks:
+              - bootOrder: 1
+                disk:
+                  bus: virtio
+                name: rootdisk
+              - disk:
+                  bus: virtio
+                name: cloudinitdisk
+              interfaces:
+              - bridge: {}
+                model: virtio
+                name: nic-1
+              gpus:
+              - deviceName: nvidia.com/GP107GL_QUADRO_P400
+                name: gpu1
+            resources:
+              limits:
+                cpu: "4"
+                memory: 8Gi
+          evictionStrategy: LiveMigrateIfPossible
+          hostname: gpu-worker
+          networks:
+          - multus:
+              networkName: vlan14-server
+            name: nic-1
+          volumes:
+          - name: rootdisk
+            persistentVolumeClaim:
+              claimName: pvc-rootdisk
+          - cloudInitNoCloud:
+              userData: |
+                #cloud-config
+                hostname: gpu-worker
+              networkData: |
+                version: 1
+                config:
+                  - type: physical
+                    name: eth0
+                    match:
+                      driver: virtio_net
+                    subnets:
+                      - type: dhcp
+            name: cloudinitdisk
