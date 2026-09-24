@@ -63,6 +63,16 @@ one node at a time and re-check jumbo mesh). DNS `139.99.149.92,
   VM devices, pin the VM to its node. P400s on 527f/49f4 only (ab56: none).
   Template `gpu-tumbleweed-p400` (4CPU/8G/50G, vlan14) is ready in
   `harvester-public` — still pin the node at creation.
+- GPU claims stuck `In Progress` ("Cannot find PCIDevice that owns …" in
+  the pcidevices-controller log): manifest-applied claims lack the
+  `ownerReferences` entry the controller requires (UI-created claims get it
+  automatically). Patch each claim to reference its same-named PCIDevice:
+  `DUID=$(kubectl get pcidevice <claim> -o jsonpath='{.metadata.uid}')`
+  then `kubectl patch pcideviceclaim -n <ns> <claim> --type=merge -p
+  '{"metadata":{"ownerReferences":[{"apiVersion":"devices.harvesterhci.io/v1beta1","kind":"PCIDevice","name":"<claim>","uid":"'$DUID'","controller":true,"blockOwnerDeletion":true}]}}'`.
+  A transient `vfio-pci/bind: device or resource busy` on the first retry is
+  normal (both GPU functions race for the IOMMU group); it clears once both
+  functions sit on vfio-pci.
 - Namespaces (`server-lhm-prod`, `servers-lhm-dev`): images and keys are
   shared by reference, nothing is copied — `harvester-public/<image>` in
   the disk template, `default/<key>` in `sshNames`, and
