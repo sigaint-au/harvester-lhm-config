@@ -1,0 +1,16 @@
+# Enables the pcidevices-controller addon (GPU/PCI passthrough backend).
+# After deploy + scan, claim P400s with PCIDeviceClaim manifests (Phase 5b).
+apiVersion: harvesterhci.io/v1beta1
+kind: Addon
+metadata:
+  name: pcidevices-controller
+  namespace: harvester-system
+spec:
+  chart: harvester-pcidevices-controller
+  enabled: true
+  repo: http://harvester-cluster-repo.cattle-system.svc/charts
+  valuesContent: |
+    image:
+      tag: v1.9.0
+    fullnameOverride: harvester-pcidevices-controller
+  version: 1.9.0

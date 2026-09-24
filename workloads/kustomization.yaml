@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - images/tumbleweed-minimal.yaml
+  - images/fedora-44-uki.yaml
+  - keys/mhahl-sk-ecdsa.yaml
+  - keys/mhahl-sk-ed25519.yaml
+  - addons/pcidevices-controller.yaml
+  - settings/backup-target.yaml
+  - vms/ref-tumbleweed-01.yaml
+  - vms/user-test-01.yaml
+  - backups/daily-vm-backup.yaml
+  - pcidevices/p400-49f4-00.0.yaml
+  - pcidevices/p400-49f4-00.1.yaml
+  - pcidevices/p400-527f-00.0.yaml
+  - pcidevices/p400-527f-00.1.yaml

@@ -1,0 +1,6 @@
+# Custom cluster network on eno2 (all nodes). Carries the tagged VLANs from
+# the sfp-sfpplus20/22/24 trunk ports. mgmt/eno1 is untouched.
+apiVersion: network.harvesterhci.io/v1beta1
+kind: ClusterNetwork
+metadata:
+  name: external

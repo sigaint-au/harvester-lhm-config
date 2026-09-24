@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - clusternetwork.yaml
+  - vlanconfig-ab56.yaml
+  - vlanconfig-527f.yaml
+  - vlanconfig-49f4.yaml
+  - networks/vlan10-mgmt.yaml
+  - networks/vlan11-secure.yaml
+  - networks/vlan12-security.yaml
+  - networks/vlan13-user.yaml
+  - networks/vlan14-server.yaml
+  - networks/vlan20-dmz.yaml
+  - networks/vlan21-vmnet.yaml

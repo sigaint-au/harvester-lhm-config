@@ -1,0 +1,19 @@
+# Daily VM backups, 02:00, keep 7. Suspended until a VM exists to back up:
+# set suspend:false once the target VM is recreated. One object per VM
+# (ScheduleVMBackup targets a single named VM).
+apiVersion: harvesterhci.io/v1beta1
+kind: ScheduleVMBackup
+metadata:
+  name: user-test-01-daily
+  namespace: default
+spec:
+  cron: "0 2 * * *"
+  maxFailure: 3
+  retain: 7
+  suspend: true
+  vmbackup:
+    type: backup
+    source:
+      apiGroup: kubevirt.io
+      kind: VirtualMachine
+      name: user-test-01

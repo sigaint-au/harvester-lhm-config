@@ -1,0 +1,8 @@
+# Quadro P400 vga function on harvester-node-527f (same IOMMU group).
+apiVersion: devices.harvesterhci.io/v1beta1
+kind: PCIDeviceClaim
+metadata:
+  name: harvester-node-527f-000003000
+spec:
+  address: "0000:03:00.0"
+  nodeName: harvester-node-527f

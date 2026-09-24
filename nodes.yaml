@@ -1,0 +1,75 @@
+# Single source of truth for the Harvester cluster.
+# Rendered into pxe/config-*.yaml and pxe/boot.ipxe by pxe/render.py.
+# Public keys are public: safe to commit. The install token is NOT here;
+# render.py reads it from .token (gitignored), $HARVESTER_TOKEN, or --token.
+
+cluster:
+  domain: lhm.prod.sigaint.au
+  vip: 10.120.14.5
+  vip_mode: static
+  http_server: http://10.120.14.100/harvester
+  iso_url: https://releases.rancher.com/harvester/v1.9.0/harvester-v1.9.0-amd64.iso
+  # GAP: checksum file location on releases.rancher.com not confirmed.
+  # Verify the ISO out-of-band and fill this in.
+  iso_sha256: null
+  subnet_mask: 255.255.255.0
+  gateway: 10.120.14.1
+  mgmt_interface: eno1
+  mgmt_mtu: 9000
+  trunk_interface: eno2
+  install_device: /dev/sda
+  data_disk: /dev/sda
+  dns_nameservers:
+    - 139.99.149.92
+    - 139.99.210.89
+    - 139.99.210.170
+  ntp_servers:
+    - time.google.com
+    - time1.google.com
+    - time2.google.com
+    - time3.google.com
+  addons:
+    harvester_pcidevices_controller: true
+
+# Pinned operator keys. No github: shortcuts (plan decision).
+ssh_authorized_keys:
+  - sk-ecdsa-sha2-nistp256@openssh.com AAAAInNrLWVjZHNhLXNoYTItbmlzdHAyNTZAb3BlbnNzaC5jb20AAAAIbmlzdHAyNTYAAABBBFbNXF81/IgFb74l2uptFfRNJaKvRZ5TKtpX/W+wqtc7tXzCLHzTxQJBhZIoqhnSIg8arC8w6exHmCrwkZetQGkAAAAEc3NoOg== Mark Hahl <mark.hahl@sigaint.au>
+  - sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIOegI4lEpCI30T4DgzJEk3W1NF+VhhoBeaoA23w51bQxAAAABHNzaDo= Mark Hahl Token2 <mark.hahl@sigaint.au>
+
+nodes:
+  - hostname: harvester-node-ab56
+    role: create
+    ip: 10.120.14.11
+    mac: "44:A8:42:0A:5E:E3"
+  - hostname: harvester-node-527f
+    role: join
+    ip: 10.120.14.12
+    mac: "90:B1:1C:3D:75:1C"
+  - hostname: harvester-node-49f4
+    role: join
+    ip: 10.120.14.13
+    mac: "90:B1:1C:3D:87:4B"
+
+# Phase 3 images (short name -> source URL).
+images:
+  tumbleweed-minimal:
+    url: https://mirror.umd.edu/opensuse/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-1.0.0-Cloud-Snapshot20260922.qcow2
+  fedora-44-uki:
+    url: https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-UEFI-UKI-44-1.7.x86_64.qcow2
+
+# Phase 5a backup target.
+backup_target:
+  type: nfs
+  endpoint: "nfs://10.120.14.100:/Backup"
+  refreshIntervalInSeconds: 60
+
+# Phase 5b GPUs. P400s confirmed on 527f + 49f4 only (ab56: Matrox BMC, none).
+gpus:
+  - node: harvester-node-527f
+    pci_address: "0000:03:00.0"
+    audio_address: "0000:03:00.1"
+    resource_name: nvidia.com/GP107GL_QUADRO_P400
+  - node: harvester-node-49f4
+    pci_address: "0000:03:00.0"
+    audio_address: "0000:03:00.1"
+    resource_name: nvidia.com/GP107GL_QUADRO_P400

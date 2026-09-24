@@ -1,0 +1,36 @@
+scheme_version: 1
+server_url: ""
+token: f95df89f43b0576ee373cd2bf715fe8cf4a402d46157b9df
+sans:
+  - harvester-primary.lhm.prod.sigaint.au
+  - 10.120.14.5
+os:
+  hostname: harvester-node-ab56
+  ssh_authorized_keys:
+    - sk-ecdsa-sha2-nistp256@openssh.com AAAAInNrLWVjZHNhLXNoYTItbmlzdHAyNTZAb3BlbnNzaC5jb20AAAAIbmlzdHAyNTYAAABBBFbNXF81/IgFb74l2uptFfRNJaKvRZ5TKtpX/W+wqtc7tXzCLHzTxQJBhZIoqhnSIg8arC8w6exHmCrwkZetQGkAAAAEc3NoOg== Mark Hahl <mark.hahl@sigaint.au>
+    - sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIOegI4lEpCI30T4DgzJEk3W1NF+VhhoBeaoA23w51bQxAAAABHNzaDo= Mark Hahl Token2 <mark.hahl@sigaint.au>
+  dns_nameservers:
+    - 139.99.149.92
+    - 139.99.210.89
+    - 139.99.210.170
+  ntp_servers:
+    - time.google.com
+    - time1.google.com
+    - time2.google.com
+    - time3.google.com
+install:
+  mode: create
+  management_interface:
+    interfaces:
+      - name: eno1
+        hwAddr: "44:A8:42:0A:5E:E3"
+    mtu: 9000
+    method: static
+    ip: 10.120.14.11
+    subnet_mask: 255.255.255.0
+    gateway: 10.120.14.1
+  device: /dev/sda
+  data_disk: /dev/sda
+  vip: 10.120.14.5
+  vip_mode: static
+  iso_url: https://releases.rancher.com/harvester/v1.9.0/harvester-v1.9.0-amd64.iso

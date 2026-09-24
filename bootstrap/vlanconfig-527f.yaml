@@ -1,0 +1,18 @@
+# Uplink binding for harvester-node-527f: single NIC eno2, MTU 9000 to match
+# the 9K switch trunks. One config per node (nodeSelector is a single map).
+apiVersion: network.harvesterhci.io/v1beta1
+kind: VlanConfig
+metadata:
+  name: external-527f
+spec:
+  clusterNetwork: external
+  nodeSelector:
+    kubernetes.io/hostname: harvester-node-527f
+  uplink:
+    nics:
+      - eno2
+    bondOptions:
+      mode: active-backup
+      miimon: 100
+    linkAttributes:
+      mtu: 9000

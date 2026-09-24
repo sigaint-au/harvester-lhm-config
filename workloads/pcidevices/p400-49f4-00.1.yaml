@@ -1,0 +1,8 @@
+# Quadro P400 audio function on harvester-node-49f4 (same IOMMU group).
+apiVersion: devices.harvesterhci.io/v1beta1
+kind: PCIDeviceClaim
+metadata:
+  name: harvester-node-49f4-000003001
+spec:
+  address: "0000:03:00.1"
+  nodeName: harvester-node-49f4

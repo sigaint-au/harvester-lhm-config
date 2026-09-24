@@ -1,0 +1,9 @@
+apiVersion: harvesterhci.io/v1beta1
+kind: VirtualMachineImage
+metadata:
+  name: fedora-44-uki
+  namespace: harvester-public
+spec:
+  displayName: Fedora-Cloud-Base-UEFI-UKI-44
+  sourceType: download
+  url: https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-UEFI-UKI-44-1.7.x86_64.qcow2

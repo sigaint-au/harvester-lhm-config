@@ -1,0 +1,7 @@
+apiVersion: harvesterhci.io/v1beta1
+kind: KeyPair
+metadata:
+  name: mhahl-sk-ecdsa
+  namespace: default
+spec:
+  publicKey: sk-ecdsa-sha2-nistp256@openssh.com AAAAInNrLWVjZHNhLXNoYTItbmlzdHAyNTZAb3BlbnNzaC5jb20AAAAIbmlzdHAyNTYAAABBBFbNXF81/IgFb74l2uptFfRNJaKvRZ5TKtpX/W+wqtc7tXzCLHzTxQJBhZIoqhnSIg8arC8w6exHmCrwkZetQGkAAAAEc3NoOg== Mark Hahl <mark.hahl@sigaint.au>

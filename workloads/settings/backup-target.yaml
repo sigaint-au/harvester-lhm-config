@@ -1,0 +1,7 @@
+# VM backup target: QNAP NFS share. refreshIntervalInSeconds must be >0
+# (0/empty causes a constant-refresh CPU loop).
+apiVersion: harvesterhci.io/v1beta1
+kind: Setting
+metadata:
+  name: backup-target
+value: '{"type":"nfs","endpoint":"nfs://10.120.14.100:/Backup","refreshIntervalInSeconds":60}'

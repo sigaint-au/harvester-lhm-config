@@ -1,0 +1,46 @@
+#!ipxe
+# Harvester v1.9.0 automatic install menu — lhm.prod.sigaint.au
+# Served as http://10.120.14.100/harvester/boot.ipxe
+# Auto-selects by client MAC; falls back to the menu below.
+# Boot order: CREATE node first, wait for UI, then the JOIN nodes.
+
+set base http://10.120.14.100/harvester
+
+:autoselect
+iseq ${mac} 44:a8:42:0a:5e:e3 && goto node-ab56 ||
+iseq ${mac} 90:b1:1c:3d:75:1c && goto node-527f ||
+iseq ${mac} 90:b1:1c:3d:87:4b && goto node-49f4 ||
+goto start
+
+:start
+menu Harvester automatic install — select node
+item --gap -- Nodes (CREATE first, then JOIN):
+item node-ab56 harvester-node-ab56 (.11 CREATE — install first)
+item node-527f harvester-node-527f (.12 JOIN)
+item node-49f4 harvester-node-49f4 (.13 JOIN)
+item --gap -- Other:
+item shell iPXE shell
+item reboot Reboot
+choose --timeout 30000 --default node-ab56 target && goto ${target} || goto start
+
+:node-ab56
+kernel ${base}/harvester-1.9.0-vmlinuz-amd64 ip=dhcp net.ifnames=1 rd.cos.disable rd.noverifyssl console=tty1 root=live:${base}/harvester-1.9.0-rootfs-amd64.squashfs harvester.install.automatic=true harvester.install.config_url=${base}/config-create.yaml
+initrd ${base}/harvester-1.9.0-initrd-amd64
+boot
+
+:node-527f
+kernel ${base}/harvester-1.9.0-vmlinuz-amd64 ip=dhcp net.ifnames=1 rd.cos.disable rd.noverifyssl console=tty1 root=live:${base}/harvester-1.9.0-rootfs-amd64.squashfs harvester.install.automatic=true harvester.install.config_url=${base}/config-join-harvester-node-527f.yaml
+initrd ${base}/harvester-1.9.0-initrd-amd64
+boot
+
+:node-49f4
+kernel ${base}/harvester-1.9.0-vmlinuz-amd64 ip=dhcp net.ifnames=1 rd.cos.disable rd.noverifyssl console=tty1 root=live:${base}/harvester-1.9.0-rootfs-amd64.squashfs harvester.install.automatic=true harvester.install.config_url=${base}/config-join-harvester-node-49f4.yaml
+initrd ${base}/harvester-1.9.0-initrd-amd64
+boot
+
+:shell
+shell
+goto start
+
+:reboot
+reboot
