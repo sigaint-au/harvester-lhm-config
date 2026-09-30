@@ -1,0 +1,17 @@
+# Longhorn keeps exactly ONE disk per node (/dev/sdb, see nodes.yaml).
+# Apply this IMMEDIATELY after install, before Longhorn auto-provisions the
+# Ceph disks (sdc+). v1.8+ replacement for the legacy auto-disk-provision-paths
+# setting. Do NOT add sdc+ via the UI afterwards — those belong to Rook.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: harvester-node-disk-manager
+  namespace: harvester-system
+data:
+  autoprovision.yaml: |
+    - hostname: "*"
+      devices:
+        - "/dev/sdb"
+  filters.yaml: |
+    - hostname: "*"
+      excludeLabels: ["COS_*", "HARV_*"]

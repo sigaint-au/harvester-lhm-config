@@ -1,0 +1,13 @@
+# Replicated pool for VM volumes: size 3 across the 3 hosts (matches the
+# Longhorn replica-3 posture). No erasure coding — 3 nodes is too few for a
+# sane EC profile with host failure domain.
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: replicapool
+  namespace: rook-ceph
+spec:
+  failureDomain: host
+  replicated:
+    size: 3
+    requireSafeReplicaSize: true

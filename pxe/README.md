@@ -37,23 +37,38 @@ one node at a time and re-check jumbo mesh). DNS `139.99.149.92,
 3. Boot ab56 (iPXE auto-selects by MAC; menu fallback). Wait for the UI at
    `https://harvester-primary.lhm.prod.sigaint.au`, then boot the joins.
 4. SSH as `rancher`; rotate the install token; set up etcd snapshots.
-5. Longhorn: add dedicated disks via UI, let replicas rebalance, evict
-   `/dev/sda`.
+5. Storage: `kubectl apply -f workloads/storage/disk-manager.yaml` pins
+   Longhorn to `/dev/sdb` (evict `/dev/sda`); Rook OSDs take `sdc+`
+   via `workloads/storage/` step 5 in the root README.
 6. `kubectl apply -f bootstrap/clusternetwork.yaml`, then
    `kubectl apply -k bootstrap/` (order matters: the webhook requires the
    cluster network to exist first).
-7. `kubectl apply -k workloads/` (backup-target needs the SERVER→QNAP
+7. Rook operator + `kubectl apply -k workloads/storage/` (root README
+   step 5); wait for `HEALTH_OK` before creating images.
+8. `kubectl apply -k workloads/` (backup-target needs the SERVER→QNAP
    firewall rule first, else the webhook rejects it — by design).
+   Create images with StorageClass `rook-ceph-block`, then refresh the
+   per-image classes in `workloads/vms/` + `workloads/templates/` before
+   applying any VM.
 
 ## VM recipe (learned the hard way)
 
 - VLAN NICs need `bridge: {}` binding, `virtio` model.
 - Root-disk PVC templates MUST set `storageClassName` to the image's
-  own class (`kubectl get vmimage -n harvester-public` → `lh-*`);
+  own class (`kubectl get vmimage -n harvester-public`; formerly `lh-*`,
+  now derived from `rook-ceph-block`);
   without it the disk is empty and the guest never boots.
 - Tumbleweed/wicked leaves NICs down unless cloud-init `networkData`
   configures them; match by `driver: virtio_net` (MACs are random per VMI).
 - UEFI images (Fedora UKI): `firmware.bootloader.efi.secureBoot: false`.
+- Windows 11 from ISO (`workloads/vms/win11-ref-01.yaml`): the installer
+  ISO MUST be a `cdrom` on `bus: sata` with `bootOrder: 1` — a virtio-bus
+  ISO shows "press any key" then hangs at the Tianocore logo. Win11 also
+  requires `efi.secureBoot: true` + `features.smm.enabled: true` +
+  `devices.tpm: {}` (opposite of the Linux recipe), q35, ≥2 CPU / 4 GiB /
+  64 GiB disk. Second SATA CD-ROM with the `virtio-win` image supplies
+  the Viostor/NetKVM drivers at Setup's disk-selection step. After
+  install: stop the VM, remove both CD-ROMs, set rootdisk `bootOrder: 1`.
 
 ## Reference
 
@@ -84,7 +99,11 @@ one node at a time and re-check jumbo mesh). DNS `139.99.149.92,
 - QNAP backup at `nfs://10.120.14.100:/Backup` (SERVER-VLAN address; the
   `qnap.sigaint.au` name resolves to the USER VLAN, which nodes can't
   reach). Verified healthy; test backup `ref-tumbleweed-01-test1` done.
-- Storage: Longhorn runs on `sdb–sdg` (auto-provisioned per-node via the
-  `harvester-node-disk-manager` ConfigMap; 49f4 has `sdb–sdf`, no `sdg`).
-  The sda default disks were evicted and deleted — sda is OS-only. 5 ×
-  931G disks per node. Images re-synced on their own after the move.
+- Storage (redeploy layout): Longhorn keeps `/dev/sdb` only (pinned via
+  `workloads/storage/disk-manager.yaml`); Rook OSDs take `sdc+`
+  (`sdg` missing on 49f4 — the `^sd[c-g]$` device filter matches what
+  exists). 5 × 931G disks per node. sda is OS-only. VM images live on
+  `rook-ceph-block`; the per-image classes in `workloads/vms/` and
+  `workloads/templates/` must be refreshed from `kubectl get vmimage -n
+  harvester-public` after every redeploy. Harvester VM backups cover
+  Longhorn volumes only — Rook VMs are excluded from `ScheduleVMBackup`.

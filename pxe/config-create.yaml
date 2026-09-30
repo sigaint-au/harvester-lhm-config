@@ -18,6 +18,12 @@ os:
     - time1.google.com
     - time2.google.com
     - time3.google.com
+  persistent_state_paths:
+    - /var/lib/rook
+    - /var/lib/ceph
+  modules:
+    - rbd
+    - nbd
 install:
   mode: create
   management_interface:

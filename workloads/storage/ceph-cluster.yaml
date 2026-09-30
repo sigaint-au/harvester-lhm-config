@@ -1,0 +1,70 @@
+# Converged Ceph cluster on the Harvester nodes. Requires the Rook operator
+# first (pinned version in nodes.yaml `storage.rook_version`):
+#
+#   ROOK=$(python3 -c "import yaml;print(yaml.safe_load(open('nodes.yaml'))['storage']['rook_version'])")
+#   kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/crds.yaml
+#   kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/common.yaml
+#   kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/operator.yaml
+#   kubectl -n rook-ceph wait --for=condition=Available deploy/rook-ceph-operator --timeout=10m
+#
+# Layout (see nodes.yaml `storage`): OSDs on sdc+ via deviceFilter (49f4 has
+# no sdg — the filter matches what exists); Ceph traffic rides mgmt (eno1).
+# MONs keep small PVCs on Longhorn so mon data survives pod reschedules.
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph
+spec:
+  cephVersion:
+    image: quay.io/ceph/ceph:v20.2.4
+    allowUnsupported: false
+  dataDirHostPath: /var/lib/rook
+  mon:
+    count: 3
+    allowMultiplePerNode: false
+    volumeClaimTemplate:
+      spec:
+        storageClassName: harvester-longhorn
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+  mgr:
+    count: 2
+    allowMultiplePerNode: false
+  dashboard:
+    enabled: false
+  storage:
+    useAllDevices: false
+    deviceFilter: "^sd[c-g]$"
+    config:
+      osdsPerDevice: "1"
+  placement:
+    all:
+      tolerations:
+        - operator: Exists
+  resources:
+    mgr:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    mon:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    osd:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        memory: 2Gi
+  healthCheck:
+    daemonHealth:
+      mon:
+        disabled: false
+        interval: 45s
+      osd:
+        disabled: false
+        interval: 60s

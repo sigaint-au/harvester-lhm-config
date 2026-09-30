@@ -30,6 +30,16 @@ cluster:
     - time3.google.com
   addons:
     harvester_pcidevices_controller: true
+  # Rook/Ceph backing for VM storage (redeploy target). Rendered into
+  # pxe/config-*.yaml as os.persistent_state_paths + os.modules — required
+  # because Harvester's OS is immutable and Rook/Ceph state must survive
+  # reboots. Must be present at INSTALL time; cannot be added later.
+  os_persistent_state_paths:
+    - /var/lib/rook
+    - /var/lib/ceph
+  os_modules:
+    - rbd
+    - nbd
 
 # Pinned operator keys. No github: shortcuts (plan decision).
 ssh_authorized_keys:
@@ -56,12 +66,39 @@ images:
     url: https://mirror.umd.edu/opensuse/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-1.0.0-Cloud-Snapshot20260922.qcow2
   fedora-44-uki:
     url: https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-UEFI-UKI-44-1.7.x86_64.qcow2
+  virtio-win:
+    url: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+  # Win11 22H2 ISO was uploaded via UI/URL (not rendered here). Live object:
+  # harvester-public/image-g2zv4 <- http://10.120.14.100/Win11_22H2_English_x64v1.iso
+  win11-22h2-iso:
+    url: http://10.120.14.100/Win11_22H2_English_x64v1.iso
 
 # Phase 5a backup target.
 backup_target:
   type: nfs
   endpoint: "nfs://10.120.14.100:/Backup"
   refreshIntervalInSeconds: 60
+
+# Redeploy storage layout: Rook-Ceph (converged) is the primary VM storage;
+# Longhorn is retained for system volumes, VM images default, and VM backups
+# (Harvester backups only work on Longhorn volumes).
+# Hosts: Dell R630, dual CPU, 100+GB RAM each — the Ceph daemon footprint
+# below (~4 OSDs x 2Gi + mons/mgrs per node) is comfortably within capacity.
+storage:
+  # Longhorn keeps exactly one disk per node. Enforced post-install via
+  # workloads/storage/disk-manager.yaml (harvester-node-disk-manager
+  # ConfigMap) — apply it BEFORE Longhorn auto-provisions the Ceph disks.
+  longhorn_disks:
+    - /dev/sdb
+  # Rook OSD device filter (CephCluster spec.storage.deviceFilter).
+  # Matches sdc+ on every node; 49f4 has no sdg, the filter simply matches
+  # what exists. /dev/sdb is excluded so Longhorn keeps its disk.
+  ceph_device_filter: "^sd[c-g]$"
+  # Pinned versions. Rook v1.20.x supports the RKE2 v1.36 in Harvester v1.9;
+  # Ceph Tentacle is Rook's default for this line. Re-pin deliberately.
+  rook_version: v1.20.8
+  ceph_image: quay.io/ceph/ceph:v20.2.4
+  rbd_pool: replicapool
 
 # Phase 5b GPUs. P400s confirmed on 527f + 49f4 only (ab56: Matrox BMC, none).
 gpus:

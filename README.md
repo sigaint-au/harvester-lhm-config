@@ -12,6 +12,7 @@ no click-ops needed to rebuild.
 | `pxe/render.py` | Generates `pxe/config-*.yaml` + `pxe/boot.ipxe` |
 | `bootstrap/` | `external` cluster network (eno2) + 7 VLAN networks |
 | `workloads/` | Images, SSH keys, addons, backup target, GPU claims, VMs, backup schedules |
+| `workloads/storage/` | Longhorn disk pin (`sdb`), Rook CephCluster + pool, `rook-ceph-block` SC, snapshot class, CSI settings |
 
 ## Prerequisites
 
@@ -44,8 +45,9 @@ then boot `harvester-node-527f` and `harvester-node-49f4`.
 ### 3. Post-install (one time, via UI/SSH)
 
 1. SSH as `rancher`; rotate the install token; enable etcd snapshots.
-2. Longhorn: disks auto-provision per `harvester-node-disk-manager`
-   ConfigMap (`sdc–sdg`, `sdb–sdf` on 49f4). Evict + delete any
+2. Pin Longhorn to `/dev/sdb` before it grabs the Ceph disks:
+   `kubectl apply -f workloads/storage/disk-manager.yaml`
+   (the `harvester-node-disk-manager` ConfigMap). Evict + delete any
    sda-backed default disk before production data lands.
 
 ### 4. Cluster networking
@@ -65,7 +67,35 @@ kubectl get net-attach-def -n default -o custom-columns=NAME:.metadata.name,ROUT
 
 Expect all seven `connectivity:true`, `ready=true`.
 
-### 5. Workloads
+### 5. Storage (Rook-Ceph, converged)
+
+Install the operator pinned in `nodes.yaml` (`storage.rook_version`,
+currently v1.20.8), waiting for it between steps:
+
+```sh
+ROOK=$(python3 -c "import yaml;print(yaml.safe_load(open('nodes.yaml'))['storage']['rook_version'])")
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/crds.yaml
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/common.yaml
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/operator.yaml
+kubectl -n rook-ceph wait --for=condition=Available deploy/rook-ceph-operator --timeout=10m
+```
+
+Then the cluster-owned manifests (OSDs on `sdc+` per
+`storage.ceph_device_filter`; Ceph traffic rides mgmt):
+
+```sh
+kubectl apply -k workloads/storage/
+kubectl -n rook-ceph get cephcluster rook-ceph -o jsonpath='{.status.ceph.health}'
+# expect HEALTH_OK once all OSDs are up (takes minutes on first prepare)
+```
+
+### 6. Workloads
+
+Create new VM images with StorageClass `rook-ceph-block` on the Storage
+tab, then refresh the `lh-*` storage class names in `workloads/vms/` and
+`workloads/templates/` from the live objects
+(`kubectl get vmimage -n harvester-public`) — image-owned classes are
+recreated on every redeploy, so the old IDs are dead.
 
 ```sh
 kubectl apply -k workloads/
@@ -80,7 +110,7 @@ those deliberately, e.g.:
 kubectl apply -f workloads/vms/user-test-01.yaml
 ```
 
-### 6. Verify a VM end to end
+### 7. Verify a VM end to end
 
 ```sh
 # lease + agent IP
@@ -95,9 +125,16 @@ ssh mhahl@<vm-ip>
 VM recipe rules (all encoded in `workloads/vms/`): `bridge: {}` on VLAN
 NICs, root-disk template uses the image's own `lh-*` storage class
 (`kubectl get vmimage -n harvester-public`), cloud-init `networkData`
-matched by `driver: virtio_net`, `secureBoot: false` for UEFI images.
+matched by `driver: virtio_net`, `secureBoot: false` for UEFI images
+(Linux only — Windows 11 needs `secureBoot: true` + SMM + TPM, see
+`pxe/README.md` and `workloads/vms/win11-ref-01.yaml`).
 
-### 7. Backups
+### 8. Backups
+
+Harvester VM backups only work on Longhorn volumes — VMs on Rook volumes
+are NOT covered by `workloads/backups/`. Keep the schedule for
+Longhorn-backed VMs only; Rook VM data has no Harvester-native backup
+until a separate story (e.g. Velero/Restic) exists.
 
 Target `nfs://10.120.14.100:/Backup` must be reachable from SERVER VLAN
 (the `qnap.sigaint.au` name resolves to USER VLAN — don't use it).
