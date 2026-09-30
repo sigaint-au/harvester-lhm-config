@@ -30,26 +30,66 @@ one node at a time and re-check jumbo mesh). DNS `139.99.149.92,
 
 ## Fresh install
 
-1. `python3 pxe/render.py` (creates `.token` on first run; back it up
-   elsewhere, it is gitignored).
-2. Serve `pxe/` over HTTP alongside the Harvester `vmlinuz`, `initrd`,
-   `rootfs.squashfs` at `http://10.120.14.100/harvester/`.
-3. Boot ab56 (iPXE auto-selects by MAC; menu fallback). Wait for the UI at
-   `https://harvester-primary.lhm.prod.sigaint.au`, then boot the joins.
-4. SSH as `rancher`; rotate the install token; set up etcd snapshots.
-5. Storage: `kubectl apply -f workloads/storage/disk-manager.yaml` pins
-   Longhorn to `/dev/sdb` (evict `/dev/sda`); Rook OSDs take `sdc+`
-   via `workloads/storage/` step 5 in the root README.
-6. `kubectl apply -f bootstrap/clusternetwork.yaml`, then
-   `kubectl apply -k bootstrap/` (order matters: the webhook requires the
-   cluster network to exist first).
-7. Rook operator + `kubectl apply -k workloads/storage/` (root README
-   step 5); wait for `HEALTH_OK` before creating images.
-8. `kubectl apply -k workloads/` (backup-target needs the SERVER→QNAP
-   firewall rule first, else the webhook rejects it — by design).
-   Create images with StorageClass `rook-ceph-block`, then refresh the
-   per-image classes in `workloads/vms/` + `workloads/templates/` before
-   applying any VM.
+Render install configs:
+
+```sh
+python3 pxe/render.py
+git status --short pxe/
+```
+
+Expected: three `config-*.yaml` files plus `boot.ipxe`; first run also
+creates gitignored `.token` (back it up elsewhere).
+
+Serve `pxe/` over HTTP alongside Harvester `vmlinuz`, `initrd`, and
+`rootfs.squashfs` at `http://10.120.14.100/harvester/`, then boot ab56
+(iPXE auto-selects by MAC; menu fallback). Wait for the UI at
+`https://harvester-primary.lhm.prod.sigaint.au`, then boot the joins.
+
+Manual safety steps:
+
+- SSH as `rancher`, rotate the install token.
+- Enable etcd snapshots.
+- In Harvester UI > Hosts, evict/delete `sda`-backed default disk.
+
+Pin Longhorn before it can claim Ceph disks:
+
+```sh
+export KUBECONFIG="$HOME/.kube/config" # or the Harvester kubeconfig path
+kubectl get nodes
+kubectl apply -f workloads/storage/disk-manager.yaml
+kubectl get configmap harvester-node-disk-manager -n harvester-system -o yaml
+```
+
+Create networking in webhook order:
+
+```sh
+kubectl apply -f bootstrap/clusternetwork.yaml
+kubectl apply -k bootstrap/
+kubectl get net-attach-def -n default -o custom-columns=NAME:.metadata.name,ROUTE:.metadata.annotations.network\\.harvesterhci\\.io/route,READY:.metadata.labels.network\\.harvesterhci\\.io/ready
+```
+
+Install the pinned Rook operator, then the storage layer:
+
+```sh
+ROOK=$(python3 -c "import yaml;print(yaml.safe_load(open('nodes.yaml'))['storage']['rook_version'])")
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/crds.yaml
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/common.yaml
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/operator.yaml
+kubectl -n rook-ceph wait --for=condition=Available deploy/rook-ceph-operator --timeout=10m
+kubectl apply -k workloads/storage/
+kubectl -n rook-ceph get cephcluster rook-ceph -o jsonpath='{.status.ceph.health}{"\n"}'
+```
+
+Expected: `HEALTH_OK` before creating images.
+
+Create images on `rook-ceph-block`, refresh dead image classes, then apply:
+
+```sh
+kubectl get vmimage -n harvester-public
+kubectl get storageclass
+grep -R '"storageClassName": "lh-' -n workloads/vms workloads/templates || true
+kubectl apply -k workloads/
+```
 
 ## VM recipe (learned the hard way)
 

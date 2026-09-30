@@ -1,8 +1,8 @@
 # harvester-lhm-config
 
 Declarative config for the Harvester cluster at `lhm.prod.sigaint.au`
-(VIP `10.120.14.5`). Everything is rendered or applied from here —
-no click-ops needed to rebuild.
+(VIP `10.120.14.5`). Everything is rendered or applied from here;
+manual UI/SSH is limited to the post-install safety checklist.
 
 ## What lives here
 
@@ -42,13 +42,36 @@ Boot `harvester-node-ab56` first (iPXE auto-selects by MAC; menu fallback).
 Wait for the UI at `https://harvester-primary.lhm.prod.sigaint.au`,
 then boot `harvester-node-527f` and `harvester-node-49f4`.
 
-### 3. Post-install (one time, via UI/SSH)
+### 3. Post-install (one time)
 
-1. SSH as `rancher`; rotate the install token; enable etcd snapshots.
-2. Pin Longhorn to `/dev/sdb` before it grabs the Ceph disks:
-   `kubectl apply -f workloads/storage/disk-manager.yaml`
-   (the `harvester-node-disk-manager` ConfigMap). Evict + delete any
-   sda-backed default disk before production data lands.
+Run from the repo root against the Harvester cluster:
+
+```sh
+export KUBECONFIG="$HOME/.kube/config" # or the Harvester kubeconfig path
+kubectl get nodes
+kubectl get storageclass
+```
+
+Expected: all three nodes `Ready`; `harvester-longhorn` is present.
+
+Manual safety steps first (UI/SSH, not repo commands):
+
+- SSH as `rancher`, rotate the install token.
+- Enable etcd snapshots.
+- In Harvester UI > Hosts, evict and delete any `sda`-backed default disk
+  before production data lands.
+
+Pin Longhorn to `/dev/sdb` before it can claim the Ceph disks:
+
+```sh
+kubectl apply -f workloads/storage/disk-manager.yaml
+kubectl get configmap harvester-node-disk-manager -n harvester-system -o yaml
+```
+
+Expected: `autoprovision.yaml` lists only `/dev/sdb`.
+
+Then continue in order: networking (§4), storage (§5), workloads (§6),
+VM verification (§7), backups (§8).
 
 ### 4. Cluster networking
 
@@ -85,17 +108,32 @@ Then the cluster-owned manifests (OSDs on `sdc+` per
 
 ```sh
 kubectl apply -k workloads/storage/
-kubectl -n rook-ceph get cephcluster rook-ceph -o jsonpath='{.status.ceph.health}'
-# expect HEALTH_OK once all OSDs are up (takes minutes on first prepare)
+kubectl -n rook-ceph get pods
+kubectl -n rook-ceph get cephcluster rook-ceph -o jsonpath='{.status.ceph.health}{"\n"}'
+kubectl -n rook-ceph get cephblockpool replicapool
+kubectl get storageclass rook-ceph-block
+kubectl get volumesnapshotclass csi-rbdplugin-snapclass
+kubectl get setting csi-driver-config csi-online-expand-validation
 ```
+
+Expected: Rook pods `Running`/`Completed`; Ceph health `HEALTH_OK`
+(first OSD prepare takes minutes); pool, StorageClass, snapshot class,
+and both CSI settings exist.
 
 ### 6. Workloads
 
 Create new VM images with StorageClass `rook-ceph-block` on the Storage
-tab, then refresh the `lh-*` storage class names in `workloads/vms/` and
-`workloads/templates/` from the live objects
-(`kubectl get vmimage -n harvester-public`) — image-owned classes are
-recreated on every redeploy, so the old IDs are dead.
+tab. Image-owned classes are recreated on every redeploy, so refresh the
+dead `lh-*` names in `workloads/vms/` and `workloads/templates/` first:
+
+```sh
+kubectl get vmimage -n harvester-public
+kubectl get storageclass
+grep -R '"storageClassName": "lh-' -n workloads/vms workloads/templates || true
+```
+
+Expected: the live image list shows the replacement classes; every `grep`
+hit is updated before applying any VM.
 
 ```sh
 kubectl apply -k workloads/
@@ -103,8 +141,10 @@ kubectl apply -k workloads/
 
 This creates the images (download takes minutes), SSH KeyPairs, enables
 `pcidevices-controller`, sets the NFS backup target, claims the P400 GPUs,
-registers the daily backup schedule (suspended), but **no VMs** — create
-those deliberately, e.g.:
+registers the daily backup schedule (suspended), applies the VM templates,
+and creates the VMs listed in `workloads/kustomization.yaml`
+(`ref-tumbleweed-01`, `user-test-01`, `win11-ref-01`). To create another VM
+deliberately, e.g.:
 
 ```sh
 kubectl apply -f workloads/vms/user-test-01.yaml
@@ -113,13 +153,13 @@ kubectl apply -f workloads/vms/user-test-01.yaml
 ### 7. Verify a VM end to end
 
 ```sh
-# lease + agent IP
-kubectl get vmi <name> -n default
+VM="user-test-01" # replace with the VM name
+kubectl get vmi "$VM" -n default
 # guest boot log (hostname, DHCP IP, login prompt)
-POD=$(kubectl get pods -n default -o name | grep virt-launcher-<name> | head -n 1)
-kubectl exec -n default $POD -c compute -- cat /var/run/kubevirt-private/*/virt-serial0-log
-# SSH from a host on the same VLAN
-ssh mhahl@<vm-ip>
+POD=$(kubectl get pods -n default -o name | grep "virt-launcher-$VM" | head -n 1)
+kubectl exec -n default "$POD" -c compute -- cat /var/run/kubevirt-private/*/virt-serial0-log
+VM_IP="<vm-ip>" # replace with the guest IP from the VMI/agent
+ssh "mhahl@${VM_IP}" # run from a host on the same VLAN
 ```
 
 VM recipe rules (all encoded in `workloads/vms/`): `bridge: {}` on VLAN
