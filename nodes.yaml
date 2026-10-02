@@ -52,13 +52,13 @@ nodes:
 
 # Phase 3 images (short name -> source URL).
 images:
-  tumbleweed-minimal:
+  tw-minimal:
     url: https://download.opensuse.org/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-Cloud.qcow2
   fedora-44-uki:
     url: https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-UEFI-UKI-44-1.7.x86_64.qcow2
   # Win11 IoT Enterprise LTSC 2024 ISO, QNAP HTTP server (SERVER VLAN).
   # Declarative image: workloads/images/win11-iot-ltsc-2024-iso.yaml.
-  win11-iot-ltsc-2024-iso:
+  win11-iot-ltsc24-iso:
     url: http://10.120.14.100/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso
 
 # Phase 5a backup target.

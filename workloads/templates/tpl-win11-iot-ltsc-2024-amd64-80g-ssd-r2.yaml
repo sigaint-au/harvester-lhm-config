@@ -1,7 +1,7 @@
 apiVersion: harvesterhci.io/v1beta1
 kind: VirtualMachineTemplateVersion
 metadata:
-  name: tpl-win11-iot-ltsc-2024-amd64-80g-ssd-r1
+  name: tpl-win11-iot-ltsc-2024-amd64-80g-ssd-r2
   namespace: harvester-public
   labels:
     template.harvesterhci.io/templateID: tpl-win11-iot-ltsc-2024-amd64-80g-ssd
@@ -31,11 +31,11 @@ spec:
             "metadata": {
               "name": "pvc-win11-iso",
               "annotations": {
-                "harvesterhci.io/imageId": "harvester-public/win11-iot-ltsc-2024-iso"
+                "harvesterhci.io/imageId": "harvester-public/win11-iot-ltsc24-iso"
               }
             },
             "spec":{
-              "storageClassName": "lh-ee4cb0b1-9606-4745-b7ef-c5da656b65bf",
+              "storageClassName": "lh-ed528b16-8ab7-4a58-b373-f3247f8b587e",
               "accessModes": ["ReadWriteMany"],
               "resources":{
                 "requests":{

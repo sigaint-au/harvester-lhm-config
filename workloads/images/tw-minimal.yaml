@@ -1,7 +1,7 @@
 apiVersion: harvesterhci.io/v1beta1
 kind: VirtualMachineImage
 metadata:
-  name: tumbleweed-minimal
+  name: tw-minimal
   namespace: harvester-public
 spec:
   displayName: openSUSE-Tumbleweed-Minimal-VM.x86_64-Cloud
