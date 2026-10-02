@@ -1,12 +1,12 @@
 apiVersion: harvesterhci.io/v1beta1
 kind: VirtualMachineTemplateVersion
 metadata:
-  name: gpu-tumbleweed-p400-v1
+  name: tpl-tumbleweed-amd64-50g-ssd-p400-r3
   namespace: harvester-public
   labels:
-    template.harvesterhci.io/templateID: gpu-tumbleweed-p400
+    template.harvesterhci.io/templateID: tpl-tumbleweed-amd64-50g-ssd-p400
 spec:
-  templateId: harvester-public/gpu-tumbleweed-p400
+  templateId: harvester-public/tpl-tumbleweed-amd64-50g-ssd-p400
   vm:
     metadata:
       annotations:
@@ -19,7 +19,7 @@ spec:
               }
             },
             "spec":{
-              "storageClassName": "lh-93d34ccb-7e92-4014-b5dc-5a9fdb6fb1e0",
+              "storageClassName": "lh-467ea614-b618-41f4-9ca2-1b90a77f17a3",
               "accessModes": ["ReadWriteMany"],
               "resources":{
                 "requests":{
@@ -72,7 +72,7 @@ spec:
           hostname: gpu-worker
           networks:
           - multus:
-              networkName: vlan14-server
+              networkName: harvester-public/vlan14-server
             name: nic-1
           volumes:
           - name: rootdisk
