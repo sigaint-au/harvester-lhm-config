@@ -60,6 +60,10 @@ images:
   # Declarative image: workloads/images/win11-22h2-iso.yaml.
   win11-22h2-iso:
     url: http://10.120.14.100/Win11_22H2_English_x64v1.iso
+  # Win11 IoT Enterprise LTSC 2024 ISO, same QNAP HTTP server.
+  # Declarative image: workloads/images/win11-iot-ltsc-2024-iso.yaml.
+  win11-iot-ltsc-2024-iso:
+    url: http://10.120.14.100/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso
 
 # Phase 5a backup target.
 backup_target:

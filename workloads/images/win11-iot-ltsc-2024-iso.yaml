@@ -1,0 +1,9 @@
+apiVersion: harvesterhci.io/v1beta1
+kind: VirtualMachineImage
+metadata:
+  name: win11-iot-ltsc-2024-iso
+  namespace: harvester-public
+spec:
+  displayName: en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814
+  sourceType: download
+  url: http://10.120.14.100/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso

@@ -7,6 +7,7 @@ resources:
   - images/tumbleweed-minimal.yaml
   - images/fedora-44-uki.yaml
   - images/win11-22h2-iso.yaml
+  - images/win11-iot-ltsc-2024-iso.yaml
   - keys/mhahl-sk-ecdsa.yaml
   - keys/mhahl-sk-ed25519.yaml
   - addons/pcidevices-controller.yaml
