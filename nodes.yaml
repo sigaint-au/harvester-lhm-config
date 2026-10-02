@@ -52,7 +52,7 @@ nodes:
 
 # Phase 3 images (short name -> source URL).
 images:
-  tw-minimal:
+  tumbleweed-minimal:
     url: https://download.opensuse.org/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-Cloud.qcow2
   fedora-44-uki:
     url: https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-UEFI-UKI-44-1.7.x86_64.qcow2

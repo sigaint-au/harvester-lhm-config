@@ -4,6 +4,6 @@ metadata:
   name: fedora-44-uki
   namespace: harvester-public
 spec:
-  displayName: Fedora-Cloud-Base-UEFI-UKI-44
+  displayName: Fedora-44-UKI-Cloud
   sourceType: download
   url: https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-UEFI-UKI-44-1.7.x86_64.qcow2

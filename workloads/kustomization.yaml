@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - namespaces/server-lhm-prod.yaml
   - namespaces/servers-lhm-dev.yaml
-  - images/tw-minimal.yaml
+  - images/tumbleweed-minimal.yaml
   - images/fedora-44-uki.yaml
   - images/win11-iot-ltsc24-iso.yaml
   - keys/mhahl-sk-ecdsa.yaml
@@ -14,10 +14,10 @@ resources:
   - addons/rancher-monitoring.yaml
   - addons/rancher-logging.yaml
   - settings/backup-target.yaml
-  - templates/tpl-tumbleweed-amd64-50g-ssd-p400.yaml
-  - templates/tpl-tumbleweed-amd64-50g-ssd-p400-r5.yaml
-  - templates/tpl-win11-iot-ltsc-2024-amd64-80g-ssd.yaml
-  - templates/tpl-win11-iot-ltsc-2024-amd64-80g-ssd-r2.yaml
+  - templates/tumbleweed-amd64-50g-ssd-p400.yaml
+  - templates/tumbleweed-amd64-50g-ssd-p400-r1.yaml
+  - templates/win11-iot-ltsc-2024-amd64-80g-ssd.yaml
+  - templates/win11-iot-ltsc-2024-amd64-80g-ssd-r1.yaml
   - pcidevices/p400-49f4-00.0.yaml
   - pcidevices/p400-49f4-00.1.yaml
   - pcidevices/p400-527f-00.0.yaml

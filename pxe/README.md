@@ -109,7 +109,7 @@ kubectl apply -k workloads/
 - Tumbleweed/wicked leaves NICs down unless cloud-init `networkData`
   configures them; match by `driver: virtio_net` (MACs are random per VMI).
 - UEFI images (Fedora UKI): `firmware.bootloader.efi.secureBoot: false`.
-- Windows 11 IoT Enterprise LTSC 2024 from ISO (`workloads/templates/tpl-win11-iot-ltsc-2024-amd64-80g-ssd-r1.yaml`): the installer
+- Windows 11 IoT Enterprise LTSC 2024 from ISO (`workloads/templates/win11-iot-ltsc-2024-amd64-80g-ssd-r1.yaml`): the installer
   ISO MUST be a `cdrom` on `bus: sata` with `bootOrder: 1` — a virtio-bus
   ISO shows "press any key" then hangs at the Tianocore logo. Win11 also
   requires `efi.secureBoot: true` + `features.smm.enabled: true` +
@@ -125,7 +125,7 @@ kubectl apply -k workloads/
   `ping -M do -s 8972 10.120.14.1`.
 - GPU attach: claim exists → add `nvidia.com/GP107GL_QUADRO_P400` to the
   VM devices, pin the VM to its node. P400s on 527f/49f4 only (ab56: none).
-  Template `tpl-tumbleweed-amd64-50g-ssd-p400` (4CPU/8G/50G, vlan14) is ready in
+  Template `tumbleweed-amd64-50g-ssd-p400` (4CPU/8G/50G, vlan14) is ready in
   `harvester-public` — still pin the node at creation.
 - GPU claims stuck `In Progress` ("Cannot find PCIDevice that owns …" in
   the pcidevices-controller log): manifest-applied claims lack the

@@ -1,12 +1,12 @@
 apiVersion: harvesterhci.io/v1beta1
 kind: VirtualMachineTemplateVersion
 metadata:
-  name: tpl-tumbleweed-amd64-50g-ssd-p400-r5
+  name: tumbleweed-amd64-50g-ssd-p400-r1
   namespace: harvester-public
   labels:
-    template.harvesterhci.io/templateID: tpl-tumbleweed-amd64-50g-ssd-p400
+    template.harvesterhci.io/templateID: tumbleweed-amd64-50g-ssd-p400
 spec:
-  templateId: harvester-public/tpl-tumbleweed-amd64-50g-ssd-p400
+  templateId: harvester-public/tumbleweed-amd64-50g-ssd-p400
   vm:
     metadata:
       annotations:
@@ -15,11 +15,11 @@ spec:
             "metadata": {
               "name": "pvc-rootdisk",
               "annotations": {
-                "harvesterhci.io/imageId": "harvester-public/tw-minimal"
+                "harvesterhci.io/imageId": "harvester-public/tumbleweed-minimal"
               }
             },
             "spec":{
-              "storageClassName": "lh-c432d9f1-62b8-4912-895b-a302da0bf3cd",
+              "storageClassName": "lh-ee8fe581-b23f-43e3-acf9-0a1aaafddcd5",
               "accessModes": ["ReadWriteMany"],
               "resources":{
                 "requests":{

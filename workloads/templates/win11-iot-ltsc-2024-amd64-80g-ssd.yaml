@@ -1,8 +1,8 @@
 apiVersion: harvesterhci.io/v1beta1
 kind: VirtualMachineTemplate
 metadata:
-  name: tpl-win11-iot-ltsc-2024-amd64-80g-ssd
+  name: win11-iot-ltsc-2024-amd64-80g-ssd
   namespace: harvester-public
 spec:
-  defaultVersionId: harvester-public/tpl-win11-iot-ltsc-2024-amd64-80g-ssd-r2
+  defaultVersionId: harvester-public/win11-iot-ltsc-2024-amd64-80g-ssd-r1
   description: "Windows 11 IoT Enterprise LTSC 2024 install-from-ISO (installer + VMDP driver CD attached). UEFI Secure Boot + SMM + TPM, 4CPU/8G/80G, vlan13-user. AFTER install: stop the VM, remove both CD-ROMs, set rootdisk bootOrder 1."
