@@ -1,7 +1,7 @@
 apiVersion: harvesterhci.io/v1beta1
 kind: VirtualMachineTemplateVersion
 metadata:
-  name: tpl-tumbleweed-amd64-50g-ssd-p400-r3
+  name: tpl-tumbleweed-amd64-50g-ssd-p400-r4
   namespace: harvester-public
   labels:
     template.harvesterhci.io/templateID: tpl-tumbleweed-amd64-50g-ssd-p400
@@ -19,7 +19,7 @@ spec:
               }
             },
             "spec":{
-              "storageClassName": "lh-467ea614-b618-41f4-9ca2-1b90a77f17a3",
+              "storageClassName": "lh-610cbc8b-1720-4dbb-b2e6-7b917f1fe92c",
               "accessModes": ["ReadWriteMany"],
               "resources":{
                 "requests":{

@@ -15,9 +15,9 @@ resources:
   - addons/rancher-logging.yaml
   - settings/backup-target.yaml
   - templates/tpl-tumbleweed-amd64-50g-ssd-p400.yaml
-  - templates/tpl-tumbleweed-amd64-50g-ssd-p400-r3.yaml
+  - templates/tpl-tumbleweed-amd64-50g-ssd-p400-r4.yaml
   - templates/tpl-win11-22h2-amd64-80g-ssd.yaml
-  - templates/tpl-win11-22h2-amd64-80g-ssd-r4.yaml
+  - templates/tpl-win11-22h2-amd64-80g-ssd-r5.yaml
   - pcidevices/p400-49f4-00.0.yaml
   - pcidevices/p400-49f4-00.1.yaml
   - pcidevices/p400-527f-00.0.yaml

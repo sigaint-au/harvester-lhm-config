@@ -1,7 +1,7 @@
 apiVersion: harvesterhci.io/v1beta1
 kind: VirtualMachineTemplateVersion
 metadata:
-  name: tpl-win11-22h2-amd64-80g-ssd-r4
+  name: tpl-win11-22h2-amd64-80g-ssd-r5
   namespace: harvester-public
   labels:
     template.harvesterhci.io/templateID: tpl-win11-22h2-amd64-80g-ssd
@@ -35,7 +35,7 @@ spec:
               }
             },
             "spec":{
-              "storageClassName": "lh-5062e311-a260-4744-b56f-4a04dda16525",
+              "storageClassName": "lh-28867b34-5122-4a60-8c35-61ad2dcb7674",
               "accessModes": ["ReadWriteMany"],
               "resources":{
                 "requests":{

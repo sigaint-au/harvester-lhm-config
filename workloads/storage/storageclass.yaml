@@ -19,15 +19,16 @@ parameters:
   # virt-launcher fails mapping with FailedMapVolume. Matches
   # Harvester's own harvester-longhorn class.
   migratable: "true"
+  # Keep a replica near consuming pods when possible.
+  dataLocality: "best-effort"
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
 ---
 # HDD tier: bulk data. Cluster default.
-# NOTE: no `migratable` here (unlike longhorn-ssd): StorageClass
-# parameters are immutable, and longhorn-hdd cannot be deleted +
-# recreated while the VM images target it. Keep VM disks on
-# longhorn-ssd; use HDD for bulk data only.
+# NOTE: adding parameters here requires deleting + recreating the
+# class (parameters are immutable), which is blocked while VM images
+# target it — retarget the images first.
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -38,6 +39,8 @@ provisioner: driver.longhorn.io
 parameters:
   numberOfReplicas: "3"
   diskSelector: "hdd"
+  migratable: "true"
+  dataLocality: "best-effort"
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
