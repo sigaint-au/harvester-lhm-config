@@ -1,8 +1,7 @@
-# RBD supports online expansion; mark the provisioner validated so Harvester
-# allows it (third-party storage is rejected by default). Keeps the Longhorn
-# default entry alongside.
+# Longhorn supports online expansion; mark the provisioner validated so
+# Harvester allows it.
 apiVersion: harvesterhci.io/v1beta1
 kind: Setting
 metadata:
   name: csi-online-expand-validation
-value: '{"driver.longhorn.io":true,"rook-ceph.rbd.csi.ceph.com":true}'
+value: '{"driver.longhorn.io":true}'

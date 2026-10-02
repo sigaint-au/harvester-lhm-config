@@ -18,12 +18,6 @@ os:
     - time1.google.com
     - time2.google.com
     - time3.google.com
-  persistent_state_paths:
-    - /var/lib/rook
-    - /var/lib/ceph
-  modules:
-    - rbd
-    - nbd
 install:
   mode: create
   management_interface:
@@ -36,7 +30,7 @@ install:
     subnet_mask: 255.255.255.0
     gateway: 10.120.14.1
   device: /dev/sda
-  data_disk: /dev/sda
+  data_disk: /dev/sdb
   vip: 10.120.14.5
   vip_mode: static
   iso_url: https://releases.rancher.com/harvester/v1.9.0/harvester-v1.9.0-amd64.iso

@@ -4,7 +4,7 @@ apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: vlan20-dmz
-  namespace: default
+  namespace: harvester-public
   annotations:
     network.harvesterhci.io/route: '{"mode":"auto","serverIPAddr":"","cidr":"","gateway":""}'
   labels:

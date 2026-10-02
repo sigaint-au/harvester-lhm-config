@@ -19,13 +19,13 @@ write_files:
 
       # Master configuration. NOTE: entries must be bare hostnames OR bare
       # IPs — "hostname IP" pairs on one line are not valid and the minion
-      # will fail to resolve them. Hostnames are used here, so guest DNS
-      # must resolve *.prod.sigaint.au. Tried in listed order; the minion
-      # fails over to the next one if the current master is unreachable.
+      # will fail to resolve them. IPs are used here so bootstrap does not
+      # depend on guest DNS. Tried in listed order; the minion fails over
+      # to the next one if the current master is unreachable.
       master:
-        - salt-42e5.overstate.syd.prod.sigaint.au
-        - salt-b2b6.overstate.syd.prod.sigaint.au
-        - salt-c010.overstate.syd.prod.sigaint.au
+        - 139.99.210.89   # salt-42e5.overstate.syd.prod.sigaint.au
+        - 139.99.210.170  # salt-b2b6.overstate.syd.prod.sigaint.au
+        - 139.99.149.92   # salt-c010.overstate.syd.prod.sigaint.au
 
       # Minion id defaults to the guest hostname (set via cloud-init
       # hostname:). Override here only if you need something explicit.

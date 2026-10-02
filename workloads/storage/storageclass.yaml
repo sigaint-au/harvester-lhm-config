@@ -1,35 +1,33 @@
-# Primary VM storage class (redeploy target). New VM images must be created
-# with this class on the Storage tab; VM root/data disks then use the
-# per-image classes Harvester generates from it.
-#
-# CDI annotations let Harvester's controller build the matching CDI storage
-# profile (Block/RWX is what KubeVirt live migration needs); without the
-# provisioner being in CDI's builtin list the annotation is mandatory.
+# Longhorn tier StorageClasses. Disks are picked by tag (applied via
+# tag-longhorn-disks.py from nodes.yaml `storage.longhorn_tiers`):
+# `longhorn-ssd` -> sdb+sdc, `longhorn-hdd` -> sdd. Replica 3 across the
+# 3 hosts. `longhorn-hdd` is the cluster default; anything performance
+# sensitive (VM roots, images) must still request `longhorn-ssd`
+# explicitly per volume.
+# SSD tier: VM roots, images, system volumes.
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: rook-ceph-block
-  annotations:
-    cdi.harvesterhci.io/storageProfileVolumeModeAccessModes: '{"Block":["ReadWriteMany"]}'
-    cdi.harvesterhci.io/storageProfileCloneStrategy: snapshot
-    cdi.harvesterhci.io/storageProfileVolumeSnapshotClass: csi-rbdplugin-snapclass
-provisioner: rook-ceph.rbd.csi.ceph.com
+  name: longhorn-ssd
+provisioner: driver.longhorn.io
 parameters:
-  clusterID: rook-ceph
-  pool: replicapool
-  imageFormat: "2"
-  # Full feature set (Ceph defaults): deep-flatten keeps image clones
-  # independent, object-map/fast-diff accelerate snapshots, exclusive-lock
-  # underpins both. Costs minor metadata write overhead — right trade on
-  # this hardware. Immutable once created: set pre-redeploy.
-  imageFeatures: layering,exclusive-lock,object-map,fast-diff,deep-flatten
-  csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
-  csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
-  csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
-  csi.storage.k8s.io/controller-expand-secret-namespace: rook-ceph
-  csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
-  csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
-  csi.storage.k8s.io/fstype: ext4
+  numberOfReplicas: "3"
+  diskSelector: "ssd"
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+---
+# HDD tier: bulk data. Cluster default.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-hdd
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "3"
+  diskSelector: "hdd"
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: Immediate

@@ -6,4 +6,4 @@ metadata:
 spec:
   displayName: openSUSE-Tumbleweed-Minimal-VM.x86_64-Cloud
   sourceType: download
-  url: https://mirror.umd.edu/opensuse/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-1.0.0-Cloud-Snapshot20260922.qcow2
+  url: https://download.opensuse.org/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-Cloud.qcow2

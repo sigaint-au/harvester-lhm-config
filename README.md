@@ -11,8 +11,8 @@ manual UI/SSH is limited to the post-install safety checklist.
 | `nodes.yaml` | Single source of truth: nodes, keys, images, backup, GPUs |
 | `pxe/render.py` | Generates `pxe/config-*.yaml` + `pxe/boot.ipxe` |
 | `bootstrap/` | `external` cluster network (eno2) + 7 VLAN networks |
-| `workloads/` | Images, SSH keys, addons, backup target, GPU claims, VMs, backup schedules |
-| `workloads/storage/` | Longhorn disk pin (`sdb`), Rook CephCluster + pool, `rook-ceph-block` SC, snapshot class, CSI settings |
+| `workloads/` | Images, SSH keys, addons, backup target, GPU claims, VM templates (no VM instances — config only) |
+| `workloads/storage/` | Longhorn disk pin (`sdb`+`sdc`+`sdd`), SSD/HDD tier classes, snapshot class, CSI settings |
 
 ## Prerequisites
 
@@ -58,17 +58,19 @@ Manual safety steps first (UI/SSH, not repo commands):
 
 - SSH as `rancher`, rotate the install token.
 - Enable etcd snapshots.
-- In Harvester UI > Hosts, evict and delete any `sda`-backed default disk
-  before production data lands.
+- In Harvester UI > Hosts, confirm the default disk is `sdb`-backed
+  (the Harvester data disk); evict and delete any auto-provisioned
+  `sdd+` disks before production data lands.
 
-Pin Longhorn to `/dev/sdb` before it can claim the Ceph disks:
+Pin Longhorn to the data disks (`/dev/sdb` + `/dev/sdc` + `/dev/sdd`)
+before it can claim anything else:
 
 ```sh
 kubectl apply -f workloads/storage/disk-manager.yaml
 kubectl get configmap harvester-node-disk-manager -n harvester-system -o yaml
 ```
 
-Expected: `autoprovision.yaml` lists only `/dev/sdb`.
+Expected: `autoprovision.yaml` lists `/dev/sdb`, `/dev/sdc` and `/dev/sdd`.
 
 Then continue in order: networking (§4), storage (§5), workloads (§6),
 VM verification (§7), backups (§8).
@@ -85,55 +87,43 @@ kubectl apply -k bootstrap/
 Verify every network reports DHCP-discovered routes:
 
 ```sh
-kubectl get net-attach-def -n default -o custom-columns=NAME:.metadata.name,ROUTE:.metadata.annotations.network\\.harvesterhci\\.io/route,READY:.metadata.labels.network\\.harvesterhci\\.io/ready
+kubectl get net-attach-def -n harvester-public -o custom-columns=NAME:.metadata.name,ROUTE:.metadata.annotations.network\\.harvesterhci\\.io\\/route,READY:.metadata.labels.network\\.harvesterhci\\.io\\/ready
 ```
 
 Expect all seven `connectivity:true`, `ready=true`.
 
-### 5. Storage (Rook-Ceph, converged)
+### 5. Storage (Longhorn, SSD + HDD tiers)
 
-Install the operator pinned in `nodes.yaml` (`storage.rook_version`,
-currently v1.20.8), waiting for it between steps:
-
-```sh
-ROOK=$(python3 -c "import yaml;print(yaml.safe_load(open('nodes.yaml'))['storage']['rook_version'])")
-kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/crds.yaml
-kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/common.yaml
-kubectl apply -f https://raw.githubusercontent.com/rook/rook/$ROOK/deploy/examples/operator.yaml
-kubectl -n rook-ceph wait --for=condition=Available deploy/rook-ceph-operator --timeout=10m
-```
-
-Then the cluster-owned manifests (OSDs on `sdc+` per
-`storage.ceph_device_filter`; Ceph traffic rides mgmt):
+Tier classes select disks by tag (`ssd` -> `sdb`+`sdc`,
+`hdd` -> `sdd`, from `nodes.yaml` `storage.longhorn_tiers`):
 
 ```sh
 kubectl apply -k workloads/storage/
-kubectl -n rook-ceph get pods
-kubectl -n rook-ceph get cephcluster rook-ceph -o jsonpath='{.status.ceph.health}{"\n"}'
-kubectl -n rook-ceph get cephblockpool replicapool
-kubectl get storageclass rook-ceph-block
-kubectl get volumesnapshotclass csi-rbdplugin-snapclass
+python3 workloads/storage/tag-longhorn-disks.py --dry-run
+python3 workloads/storage/tag-longhorn-disks.py
+kubectl get storageclass longhorn-ssd longhorn-hdd
+kubectl get volumesnapshotclass longhorn-snapshot
 kubectl get setting csi-driver-config csi-online-expand-validation
 ```
 
-Expected: Rook pods `Running`/`Completed`; Ceph health `HEALTH_OK`
-(first OSD prepare takes minutes); pool, StorageClass, snapshot class,
-and both CSI settings exist.
+Expected: both tier classes exist; re-running the tag script reports
+`tags already correct` on all three nodes.
 
 ### 6. Workloads
 
-Create new VM images with StorageClass `rook-ceph-block` on the Storage
-tab. Image-owned classes are recreated on every redeploy, so refresh the
-dead `lh-*` names in `workloads/vms/` and `workloads/templates/` first:
+Create new VM images with StorageClass `longhorn-ssd` on the Storage
+tab. Image-backed disks carry `lh-PENDING-<image>` placeholders
+(Harvester regenerates the real `lh-*` class per image on every
+redeploy); fill them from the live cluster before applying the templates:
 
 ```sh
-kubectl get vmimage -n harvester-public
-kubectl get storageclass
-grep -R '"storageClassName": "lh-' -n workloads/vms workloads/templates || true
+python3 workloads/storage/refresh-image-classes.py --dry-run
+python3 workloads/storage/refresh-image-classes.py
+grep -R 'lh-PENDING' -n workloads/templates && echo STALE || echo OK
 ```
 
-Expected: the live image list shows the replacement classes; every `grep`
-hit is updated before applying any VM.
+Expected: the script reports one substitution per image-backed disk;
+the final grep finds nothing.
 
 ```sh
 kubectl apply -k workloads/
@@ -141,19 +131,14 @@ kubectl apply -k workloads/
 
 This creates the images (download takes minutes), SSH KeyPairs, enables
 `pcidevices-controller`, sets the NFS backup target, claims the P400 GPUs,
-registers the daily backup schedule (suspended), applies the VM templates,
-and creates the VMs listed in `workloads/kustomization.yaml`
-(`ref-tumbleweed-01`, `user-test-01`, `win11-ref-01`). To create another VM
-deliberately, e.g.:
-
-```sh
-kubectl apply -f workloads/vms/user-test-01.yaml
-```
+and applies the VM templates. This repo is config only: it holds no VM
+instances. Create VMs from the templates in the Harvester UI
+(Virtual Machines > Create from Template), never as manifests here.
 
 ### 7. Verify a VM end to end
 
 ```sh
-VM="user-test-01" # replace with the VM name
+VM="<vm-name>" # VM created from a template via the UI
 kubectl get vmi "$VM" -n default
 # guest boot log (hostname, DHCP IP, login prompt)
 POD=$(kubectl get pods -n default -o name | grep "virt-launcher-$VM" | head -n 1)
@@ -162,19 +147,18 @@ VM_IP="<vm-ip>" # replace with the guest IP from the VMI/agent
 ssh "mhahl@${VM_IP}" # run from a host on the same VLAN
 ```
 
-VM recipe rules (all encoded in `workloads/vms/`): `bridge: {}` on VLAN
+VM recipe rules (all encoded in `workloads/templates/`): `bridge: {}` on VLAN
 NICs, root-disk template uses the image's own `lh-*` storage class
 (`kubectl get vmimage -n harvester-public`), cloud-init `networkData`
 matched by `driver: virtio_net`, `secureBoot: false` for UEFI images
 (Linux only — Windows 11 needs `secureBoot: true` + SMM + TPM, see
-`pxe/README.md` and `workloads/vms/win11-ref-01.yaml`).
+`pxe/README.md` and `workloads/templates/tpl-win11-22h2-amd64-80g-ssd-r4.yaml`).
 
 ### 8. Backups
 
-Harvester VM backups only work on Longhorn volumes — VMs on Rook volumes
-are NOT covered by `workloads/backups/`. Keep the schedule for
-Longhorn-backed VMs only; Rook VM data has no Harvester-native backup
-until a separate story (e.g. Velero/Restic) exists.
+All volumes are Longhorn now, so every VM volume can be backed up —
+no Rook exclusion to worry about. Backup schedules (`ScheduleVMBackup`,
+one object per VM) are created alongside their VM, not stored here.
 
 Target `nfs://10.120.14.100:/Backup` must be reachable from SERVER VLAN
 (the `qnap.sigaint.au` name resolves to USER VLAN — don't use it).
@@ -182,12 +166,6 @@ Check health:
 
 ```sh
 kubectl get setting backup-target -o jsonpath='{.value}{"\n"}'
-```
-
-Enable a schedule once its VM exists:
-
-```sh
-kubectl patch schedulevmbackup <name> -n default --type=merge -p '{"spec":{"suspend":false}}'
 ```
 
 ## Rollback

@@ -1,5 +1,0 @@
-# Idempotent: the Rook operator install (common.yaml) also creates this.
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: rook-ceph

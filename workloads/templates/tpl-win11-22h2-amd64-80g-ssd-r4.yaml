@@ -1,0 +1,116 @@
+apiVersion: harvesterhci.io/v1beta1
+kind: VirtualMachineTemplateVersion
+metadata:
+  name: tpl-win11-22h2-amd64-80g-ssd-r4
+  namespace: harvester-public
+  labels:
+    template.harvesterhci.io/templateID: tpl-win11-22h2-amd64-80g-ssd
+spec:
+  templateId: harvester-public/tpl-win11-22h2-amd64-80g-ssd
+  vm:
+    metadata:
+      annotations:
+        harvesterhci.io/volumeClaimTemplates: |-
+          [{
+            "metadata": {
+              "name": "pvc-rootdisk",
+              "annotations": {}
+            },
+            "spec":{
+              "storageClassName": "longhorn-ssd",
+              "accessModes": ["ReadWriteMany"],
+              "resources":{
+                "requests":{
+                  "storage": "80Gi"
+                }
+              },
+              "volumeMode": "Block"
+            }
+          },
+          {
+            "metadata": {
+              "name": "pvc-win11-iso",
+              "annotations": {
+                "harvesterhci.io/imageId": "harvester-public/win11-22h2-iso"
+              }
+            },
+            "spec":{
+              "storageClassName": "lh-5062e311-a260-4744-b56f-4a04dda16525",
+              "accessModes": ["ReadWriteMany"],
+              "resources":{
+                "requests":{
+                  "storage": "6Gi"
+                }
+              },
+              "volumeMode": "Block"
+            }
+          }]
+    spec:
+      runStrategy: RerunOnFailure
+      template:
+        metadata:
+          labels:
+            harvesterhci.io/vmName: win11
+        spec:
+          domain:
+            machine:
+              type: q35
+            cpu:
+              cores: 4
+              sockets: 1
+              threads: 1
+            memory:
+              guest: 8Gi
+            firmware:
+              bootloader:
+                efi:
+                  secureBoot: true
+            features:
+              acpi:
+                enabled: true
+              smm:
+                enabled: true
+            devices:
+              tpm: {}
+              disks:
+              - bootOrder: 1
+                cdrom:
+                  bus: sata
+                name: win11-iso
+              - bootOrder: 2
+                disk:
+                  bus: virtio
+                name: rootdisk
+              - cdrom:
+                  bus: sata
+                name: virtio-drivers
+              interfaces:
+              - bridge: {}
+                model: virtio
+                name: nic-1
+              inputs:
+              - bus: usb
+                name: tablet
+                type: tablet
+            resources:
+              limits:
+                cpu: "4"
+                memory: 8Gi
+          evictionStrategy: LiveMigrateIfPossible
+          hostname: win11
+          networks:
+          - multus:
+              networkName: harvester-public/vlan13-user
+            name: nic-1
+          volumes:
+          - name: rootdisk
+            persistentVolumeClaim:
+              claimName: pvc-rootdisk
+          - name: win11-iso
+            persistentVolumeClaim:
+              claimName: pvc-win11-iso
+          # Virtio drivers from the SUSE VMDP container disk image
+          # (no PVC/image download needed).
+          - name: virtio-drivers
+            containerDisk:
+              image: registry.suse.com/suse/vmdp/vmdp:2.5.5

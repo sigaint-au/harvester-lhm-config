@@ -57,9 +57,8 @@ def config_text(node, cluster, keys, token):
     lines += [f"    - {d}" for d in c["dns_nameservers"]]
     lines += ["  ntp_servers:"]
     lines += [f"    - {n}" for n in c["ntp_servers"]]
-    # Rook/Ceph host backing: persistent state paths + kernel modules.
-    # Install-time only (immutable OS); absent keys render nothing so old
-    # nodes.yaml files still produce identical output.
+    # Optional host backing (persistent state paths + kernel modules).
+    # Install-time only (immutable OS); absent keys render nothing.
     paths = c.get("os_persistent_state_paths") or []
     if paths:
         lines += ["  persistent_state_paths:"]

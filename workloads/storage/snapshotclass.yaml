@@ -1,15 +1,11 @@
-# Snapshot class for Rook RBD volumes. Referenced by the csi-driver-config
-# Setting (VM snapshots) and the rook-ceph-block CDI clone strategy.
-# Default class so UI snapshot flows resolve without an explicit pick.
+# Snapshot class for Longhorn volumes. Referenced by the csi-driver-config
+# Setting (VM snapshots + backups). Default class so UI snapshot flows
+# resolve without an explicit pick.
 apiVersion: snapshot.storage.k8s.io/v1
 kind: VolumeSnapshotClass
 metadata:
-  name: csi-rbdplugin-snapclass
+  name: longhorn-snapshot
   annotations:
     snapshot.storage.kubernetes.io/is-default-class: "true"
-driver: rook-ceph.rbd.csi.ceph.com
-parameters:
-  clusterID: rook-ceph
-  csi.storage.k8s.io/snapshotter-secret-name: rook-csi-rbd-provisioner
-  csi.storage.k8s.io/snapshotter-secret-namespace: rook-ceph
+driver: driver.longhorn.io
 deletionPolicy: Delete

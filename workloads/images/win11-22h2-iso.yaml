@@ -1,0 +1,9 @@
+apiVersion: harvesterhci.io/v1beta1
+kind: VirtualMachineImage
+metadata:
+  name: win11-22h2-iso
+  namespace: harvester-public
+spec:
+  displayName: Win11_22H2_English_x64v1
+  sourceType: download
+  url: http://10.120.14.100/Win11_22H2_English_x64v1.iso

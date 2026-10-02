@@ -1,0 +1,8 @@
+version: 1
+config:
+  - type: physical
+    name: eth0
+    match:
+      driver: virtio_net
+    subnets:
+      - type: dhcp

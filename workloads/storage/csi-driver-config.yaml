@@ -1,10 +1,7 @@
-# Tell Harvester which snapshot class backs VM snapshots for the Rook
-# provisioner. The Longhorn entry preserves the install default (system +
-# any Longhorn volumes keep snapshot/backup behavior). backupVolumeSnapshot
-# ClassName is intentionally absent for Rook: Harvester VM backups only work
-# on Longhorn volumes — Rook volumes are excluded from ScheduleVMBackup.
+# Tell Harvester which snapshot class backs VM snapshots and backups for
+# the Longhorn provisioner.
 apiVersion: harvesterhci.io/v1beta1
 kind: Setting
 metadata:
   name: csi-driver-config
-value: '{"driver.longhorn.io":{"volumeSnapshotClassName":"longhorn-snapshot","backupVolumeSnapshotClassName":"longhorn"},"rook-ceph.rbd.csi.ceph.com":{"volumeSnapshotClassName":"csi-rbdplugin-snapclass"}}'
+value: '{"driver.longhorn.io":{"volumeSnapshotClassName":"longhorn-snapshot","backupVolumeSnapshotClassName":"longhorn"}}'

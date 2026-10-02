@@ -6,6 +6,7 @@ resources:
   - namespaces/servers-lhm-dev.yaml
   - images/tumbleweed-minimal.yaml
   - images/fedora-44-uki.yaml
+  - images/win11-22h2-iso.yaml
   - keys/mhahl-sk-ecdsa.yaml
   - keys/mhahl-sk-ed25519.yaml
   - addons/pcidevices-controller.yaml
@@ -13,12 +14,34 @@ resources:
   - addons/rancher-monitoring.yaml
   - addons/rancher-logging.yaml
   - settings/backup-target.yaml
-  - vms/ref-tumbleweed-01.yaml
-  - vms/user-test-01.yaml
-  - backups/daily-vm-backup.yaml
-  - templates/gpu-tumbleweed-p400.yaml
-  - templates/gpu-tumbleweed-p400-v1.yaml
+  - templates/tpl-tumbleweed-amd64-50g-ssd-p400.yaml
+  - templates/tpl-tumbleweed-amd64-50g-ssd-p400-r3.yaml
+  - templates/tpl-win11-22h2-amd64-80g-ssd.yaml
+  - templates/tpl-win11-22h2-amd64-80g-ssd-r4.yaml
   - pcidevices/p400-49f4-00.0.yaml
   - pcidevices/p400-49f4-00.1.yaml
   - pcidevices/p400-527f-00.0.yaml
   - pcidevices/p400-527f-00.1.yaml
+
+# Cloud config templates (Advanced > Cloud Config Templates in the UI).
+# Built from workloads/cloudinit/ so the files stay single source. The
+# harvesterhci.io/cloud-init-template label is what the UI lists; the data
+# key must be exactly `cloudInit`. No name hash so references stay stable.
+# NOTE: salt-tumbleweed-base.yaml keeps `hostname: CHANGEME` on purpose —
+# the UI copies template content into the per-VM editor, and a baked
+# hostname would duplicate Salt minion IDs. Set it per VM at creation.
+configMapGenerator:
+  - name: salt-tumbleweed-base
+    options:
+      disableNameSuffixHash: true
+      labels:
+        harvesterhci.io/cloud-init-template: user
+    files:
+      - cloudInit=cloudinit/salt-tumbleweed-base.yaml
+  - name: dhcp-network
+    options:
+      disableNameSuffixHash: true
+      labels:
+        harvesterhci.io/cloud-init-template: network
+    files:
+      - cloudInit=cloudinit/dhcp-network.yaml
