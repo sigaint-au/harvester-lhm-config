@@ -13,11 +13,21 @@ provisioner: driver.longhorn.io
 parameters:
   numberOfReplicas: "3"
   diskSelector: "ssd"
+  # Required for Harvester VM disks (RWX): lets the attachment follow
+  # the pod between nodes (live migration). Without it Longhorn pins
+  # the volume behind a share-manager on the wrong node and the
+  # virt-launcher fails mapping with FailedMapVolume. Matches
+  # Harvester's own harvester-longhorn class.
+  migratable: "true"
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
 ---
 # HDD tier: bulk data. Cluster default.
+# NOTE: no `migratable` here (unlike longhorn-ssd): StorageClass
+# parameters are immutable, and longhorn-hdd cannot be deleted +
+# recreated while the VM images target it. Keep VM disks on
+# longhorn-ssd; use HDD for bulk data only.
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
