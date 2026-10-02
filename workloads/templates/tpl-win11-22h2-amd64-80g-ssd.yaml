@@ -1,8 +1,0 @@
-apiVersion: harvesterhci.io/v1beta1
-kind: VirtualMachineTemplate
-metadata:
-  name: tpl-win11-22h2-amd64-80g-ssd
-  namespace: harvester-public
-spec:
-  defaultVersionId: harvester-public/tpl-win11-22h2-amd64-80g-ssd-r5
-  description: "Windows 11 install-from-ISO (22H2, installer + VMDP driver CD attached). UEFI Secure Boot + SMM + TPM, 4CPU/8G/80G, vlan13-user. AFTER install: stop the VM, remove both CD-ROMs, set rootdisk bootOrder 1."

@@ -152,7 +152,7 @@ NICs, root-disk template uses the image's own `lh-*` storage class
 (`kubectl get vmimage -n harvester-public`), cloud-init `networkData`
 matched by `driver: virtio_net`, `secureBoot: false` for UEFI images
 (Linux only — Windows 11 needs `secureBoot: true` + SMM + TPM, see
-`pxe/README.md` and `workloads/templates/tpl-win11-22h2-amd64-80g-ssd-r4.yaml`).
+`pxe/README.md` and `workloads/templates/tpl-win11-iot-ltsc-2024-amd64-80g-ssd-r1.yaml`).
 
 ### 8. Backups
 

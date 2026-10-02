@@ -109,7 +109,7 @@ kubectl apply -k workloads/
 - Tumbleweed/wicked leaves NICs down unless cloud-init `networkData`
   configures them; match by `driver: virtio_net` (MACs are random per VMI).
 - UEFI images (Fedora UKI): `firmware.bootloader.efi.secureBoot: false`.
-- Windows 11 from ISO (`workloads/templates/tpl-win11-22h2-amd64-80g-ssd-r4.yaml`): the installer
+- Windows 11 IoT Enterprise LTSC 2024 from ISO (`workloads/templates/tpl-win11-iot-ltsc-2024-amd64-80g-ssd-r1.yaml`): the installer
   ISO MUST be a `cdrom` on `bus: sata` with `bootOrder: 1` — a virtio-bus
   ISO shows "press any key" then hangs at the Tianocore logo. Win11 also
   requires `efi.secureBoot: true` + `features.smm.enabled: true` +
